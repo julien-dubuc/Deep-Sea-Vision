@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050f17">
 <title>DEEP SEA VISION: Object Detection Simulator</title>
 <style>
@@ -814,7 +817,6 @@
   @media (max-width:560px){
     .topbar-title,body.home-active .topbar-title{display:none;}
     .home-title{display:block;}
-    #fullscreenBtn{display:none;}
     .home-stage{gap:10px;}
     .home-tagline{font-size:.86rem;line-height:1.5;}
     .home-sonar{width:clamp(110px,calc(var(--vh) - 500px),250px);height:clamp(110px,calc(var(--vh) - 500px),250px);}
@@ -894,6 +896,22 @@
   .st-line{font-size:.78rem;color:var(--text-dim);line-height:1.5;}
   .st-line b{color:var(--foam);font-weight:600;}
   #scene-stats .panel{max-height:calc(var(--vh) - 92px);overflow-y:auto;}
+  /* phone top bar: keep every button visible */
+  .icon-btn.on{border-color:var(--brass-light);background:rgba(201,161,90,.16);}
+  .tgl[disabled]{opacity:.45;cursor:default;}
+  @media (max-width:560px){
+    .topbar{padding:0 8px;}
+    .topbar-right{gap:6px;}
+    .icon-btn,.icon-btn svg{flex:0 0 auto;}
+    .icon-btn{width:38px;height:38px;}
+    .icon-btn svg{width:17px;height:17px;}
+    .timer-chip{padding:5px 9px;font-size:.74rem;gap:4px;}
+    body.in-mission .topbar-left{display:none;}
+    body.in-mission .topbar{justify-content:flex-end;}
+    .home-toggles{gap:8px;}
+    .tgl{padding:8px 12px;font-size:.72rem;letter-spacing:.5px;}
+  }
+  @media (max-width:560px) and (pointer:coarse){ .icon-btn{width:40px;height:40px;} }
 
 </style>
 </head>
@@ -912,6 +930,9 @@
     <button class="icon-btn" id="soundBtn" title="Ambient sound" onclick="toggleSound()">
       <svg id="soundIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="3 9 3 15 8 15 13 20 13 4 8 9 3 9"/><path d="M16 8a5 5 0 0 1 0 8"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
       <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 9 3 15 8 15 13 20 13 4 8 9 3 9"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/></svg>
+    </button>
+    <button class="icon-btn" id="vibeBtn" title="Vibration" onclick="toggleVibe()" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/><path id="vibeOffLine" d="M3 3l18 18" style="display:none;"/></svg>
     </button>
     <button class="icon-btn" id="fullscreenBtn" title="Fullscreen" onclick="toggleFullscreen()">
       <svg id="fsIconExpand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -981,7 +1002,7 @@
         </li>
         <li>
           <span class="howto-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M9 13l2 2 4-4"/></svg></span>
-          <span>Some mistakes can be rescued: a bonus question offers an emergency override, and a correct answer keeps the mission alive. A wrong override, or a fatal mistake, is a true Game Over.</span>
+          <span>Some mistakes can be overcome: after a slip, a rescue question may appear and offer an emergency override. A correct answer keeps the mission alive. Not every mistake gets a second chance, though: a wrong override, or a fatal mistake, is a true Game Over and you start again from zero.</span>
         </li>
         <li>
           <span class="howto-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="17" cy="12" r="2.2"/><path d="M6 8.2V15.8"/><path d="M8 6.5h4a3 3 0 0 1 3 3V11"/><path d="M8 17.5h4a3 3 0 0 0 3-3v-1"/></svg></span>
@@ -1076,11 +1097,11 @@
   };
 
   /* ===== PATH A: DEEP SEA DESCENT (BlueROV2) ===== */
-  Q('a0',{k:'brief',h:'Deep Sea Descent',t:'You are the AI of a BlueROV2, a small robot on a cable. Its job: bring back a flight recorder from the deep seabed. Some mistakes can be rescued by an emergency override. A wrong override is a true Game Over.',to:'a1',btn:'Begin descent.'});
+  Q('a0',{k:'brief',h:'Deep Sea Descent',t:'You are the AI of a BlueROV2, a small robot on a cable. Its job: bring back a flight recorder from the deep seabed. Some mistakes can be overcome with an emergency override. A wrong override is a true Game Over.',to:'a1',btn:'Begin descent.'});
   Q('a1',{why:'Sound travels far underwater. Radio waves (GPS) and light do not, so sonar is the right tool.',n:1,d:'DEPTH: 200M',h:'The Depth Barrier',t:'Below 200 meters the sunlight is gone and the camera cannot see far. How should the AI map the seabed?',c:[
     ['Use GPS, the satellite navigation system.',B('FAIL: NO SIGNAL','Radio waves cannot cross seawater, so there is no GPS signal down here. The AI core crashes.','bn1','a2','Lesson: underwater, use sound. Sonar works where radio and light do not.')],
     ['Use sonar: sound waves that bounce back.','a2']]});
-  Q('a2',{n:2,d:'DEPTH: 600M',h:'Thermal Drain',g:'power',t:'MINI-GAME: The water is 2°C and the battery drains twice as fast. Share your power. Heaters keep the electronics alive (they need at least 2 units). Thrusters and sensors use the rest. You can spend 6 units at most.',win:R('SUCCESS: POWER SAVED. The heaters stay on, the thrusters go slow and the extra sensors are off.','a3','SUCCESS'),f1:B('FAIL: CPU FROZE','Without enough heat, the electronics freeze in 2°C water.','bn1','a3','Lesson: keep the electronics warm. Save power by slowing down instead.'),f2:B('FAIL: BATTERY EMPTY','You asked for more power than the battery can give. The ROV runs dry halfway.','bn1','a3','Lesson: slow thrusters and fewer sensors save power.')});
+  Q('a2',{n:2,d:'DEPTH: 600M',h:'Thermal Drain',g:'power',t:'MINI-GAME: At 600 m deep, sunlight no longer reaches the water, so it is only 2°C. This cold makes the battery drain twice as fast. Share your power. Heaters keep the electronics alive (they need at least 2 units). Thrusters and sensors use the rest. You can spend 6 units at most.',win:R('SUCCESS: POWER SAVED. The heaters stay on, the thrusters go slow and the extra sensors are off.','a3','SUCCESS'),f1:B('FAIL: CPU FROZE','Without enough heat, the electronics freeze in 2°C water.','bn1','a3','Lesson: keep the electronics warm. Save power by slowing down instead.'),f2:B('FAIL: BATTERY EMPTY','You asked for more power than the battery can give. The ROV runs dry halfway.','bn1','a3','Lesson: slow thrusters and fewer sensors save power.')});
   Q('a3',{why:'A 4-second delay is too long to steer by hand. The AI must react on its own.',n:3,d:'DEPTH: 1,200M',h:'The Acoustic Delay',t:'The pilot\'s commands travel by sound and arrive 4 seconds late. A rock wall suddenly appears!',c:[
     ['Wait for the pilot\'s next command.',B('FAIL: CRASHED INTO REEF','The evasion command arrives 4 seconds too late.','bn1','a4','Lesson: when commands are delayed, the robot must react by itself.')],
     ['Let the AI avoid obstacles by itself.','a4']]});
@@ -1116,7 +1137,7 @@
     ['Give it slack and never force it.',R('The tension relaxes and the tether is safe. The mission goes on.','@')]]});
 
   /* ===== PATH B: MILITARY AUV ===== */
-  Q('b0',{k:'brief',h:'Search & Track',t:'You are the AI of a stealth military AUV (a robot submarine with no cable). Find and identify an enemy submarine without being detected. Some mistakes can be recovered. Others are final.',to:'b1',btn:'Begin patrol.'});
+  Q('b0',{k:'brief',h:'Search & Track',t:'You are the AI of a stealth military AUV (a robot submarine with no cable). Find and identify an enemy submarine without being detected. Some mistakes can be overcome. Others are final.',to:'b1',btn:'Begin patrol.'});
   Q('b1',{why:'In enemy waters a PING shows your position. Passive sonar only listens, so you stay hidden.',n:1,h:'Active vs Passive Sonar',t:'Active sonar sends a loud PING and listens for the echo. Passive sonar only listens. You are in enemy waters. Which one do you use?',c:[
     ['Active sonar: send a PING.','b1a'],['Passive sonar: only listen.','b2']]});
   Q('b1a',{h:'The Jamming Zone',t:'Wrong move: a PING is loud. The enemy heard it and is now jamming your sonar. How do you keep tracking them?',c:[
@@ -1621,7 +1642,11 @@
    ['implosion','A sudden collapse inwards, caused by outside pressure.'],['backscatter','Light bouncing back from particles in the water.'],
    ['thrusters','The small propellers that move the vehicle.'],['pump-jet','A quiet propeller placed inside a ring.'],
    ['decoy','A fake target made to fool sensors.'],['relay','A station that passes a message on.'],
-   ['nm','nm = nanometer. A unit for the color (wavelength) of light.']
+   ['nm','nm = nanometer. A unit for the color (wavelength) of light.'],
+   ['hull','The outer shell of a vessel. It keeps the water out.'],['claw','The gripper at the end of a robot arm, used to grab objects.'],
+   ['manipulator','A robot arm that picks up and moves objects.'],['seabed','The ground at the bottom of the sea.'],
+   ['flight recorder','The black box of a vehicle. It stores data about what happened.'],['bio-fouling','Algae, barnacles and other living things growing on a surface underwater.'],
+   ['ascent','The trip back up to the surface.'],['wreck','The remains of a sunken ship.'],['debris','Broken pieces scattered around.']
   ];
   var GLMAP = {}, GLSEEN = {}, GLSCREEN = {}, GLRE;
   (function(){
@@ -1670,7 +1695,10 @@
   function syncToggles(){
     var a = $('tglSound'), b = $('tglVibe');
     if(a){ a.textContent = (soundEnabled ? '🔊 Sound: on' : '🔇 Sound: off'); a.classList.toggle('on', soundEnabled); }
-    if(b){ b.style.display = navigator.vibrate ? '' : 'none'; b.textContent = '📳 Vibration: ' + (vibeOn ? 'on' : 'off'); b.classList.toggle('on', vibeOn); }
+    var canVibe = !!navigator.vibrate;
+    if(b){ b.disabled = !canVibe; b.textContent = canVibe ? '📳 Vibration: ' + (vibeOn ? 'on' : 'off') : '📳 Vibration: not supported'; b.classList.toggle('on', canVibe && vibeOn); }
+    var vb = $('vibeBtn');
+    if(vb){ vb.style.display = canVibe ? '' : 'none'; vb.classList.toggle('on', vibeOn); vb.title = 'Vibration: ' + (vibeOn ? 'on' : 'off'); var ol = $('vibeOffLine'); if(ol) ol.style.display = vibeOn ? 'none' : ''; }
   }
   function toggleVibe(){ vibeOn = !vibeOn; try{ localStorage.setItem('dsv_vibe', vibeOn ? '1' : '0'); }catch(e){} syncToggles(); if(vibeOn) vibe(30); }
   var sfxGain = null;
@@ -1757,8 +1785,9 @@
     var showStars = ok || S.path === 'c';
     var starTxt = new Array(st + 1).join('★') + new Array(4 - st).join('☆');
     var text = 'DEEP SEA VISION | ' + P.name + ': ' + label + (showStars ? ' ' + starTxt : '') + ' in ' + fmt(ms) + ', ' + RUN.err + ' mistake' + (RUN.err === 1 ? '' : 's') +
-      (ok ? '. Can you beat me?' : ' (step ' + step + '/' + P.total + ': ' + P.steps[step - 1] + '). Can you do better?');
-    var out = {ok:ok, partial:partial, ms:ms, stars:st, showStars:showStars, step:step, total:P.total, stepName:P.steps[step - 1], label:label, err:RUN.err, best:best, isNew:isNew, vessel:P.name, text:text};
+      (ok ? '. Can you beat me?' : ' (' + ans + '/' + P.total + ' questions answered, stopped at: ' + P.steps[step - 1] + '). Can you do better?');
+    var ans = ok ? P.total : Math.max(0, Math.min(P.total, Math.floor(S.prog) - 1));
+    var out = {ok:ok, partial:partial, ms:ms, stars:st, showStars:showStars, step:step, ans:ans, total:P.total, stepName:P.steps[step - 1], label:label, err:RUN.err, best:best, isNew:isNew, vessel:P.name, text:text};
     out.done = ok || (S.path === 'c' && S.q === 'c6'); statsEnd(out);
     return out;
   }
@@ -1766,11 +1795,11 @@
     var r = LASTRES = resultInfo(nd), h = '';
     var btns = '<div class="res-btns"><button type="button" class="choice" onclick="shareResult()">Share result</button><button type="button" class="choice" onclick="copyResult()">Copy text</button></div>';
     if(!r.showStars){
-      return '<div class="res"><div class="res-line">Step ' + r.step + '/' + r.total + ' &middot; ' + r.stepName + ' &middot; ' + fmt(r.ms) + '</div>' + btns + '</div>';
+      return '<div class="res"><div class="res-line">Answered ' + r.ans + '/' + r.total + ' &middot; stopped at ' + r.stepName + ' &middot; ' + fmt(r.ms) + '</div>' + btns + '</div>';
     }
     h = '<div class="res"><div class="res-top">DEEP SEA VISION &middot; ' + r.vessel.toUpperCase() + '</div><div class="res-label">' + r.label + '</div><div class="res-stars">';
     for(var i = 0; i < 3; i++) h += '<span class="' + (i < r.stars ? '' : 'off') + '">' + (i < r.stars ? '★' : '☆') + '</span>';
-    h += '</div><div class="res-grid"><div><small>TIME</small><b>' + fmt(r.ms) + '</b></div><div><small>MISTAKES</small><b>' + r.err + '</b></div><div><small>STEP</small><b>' + r.step + '/' + r.total + '</b></div></div>';
+    h += '</div><div class="res-grid"><div><small>TIME</small><b>' + fmt(r.ms) + '</b></div><div><small>MISTAKES</small><b>' + r.err + '</b></div><div><small>ANSWERED</small><b>' + r.ans + '/' + r.total + '</b></div></div>';
     var sub;
     if(r.partial) sub = 'Only full successes count for the best time.';
     else if(r.ok) sub = (r.stars === 3 ? 'Perfect run: no mistakes. ' : '') + (r.isNew ? 'New best time on this device!' : 'Best time on this device: ' + fmt(r.best));
@@ -1802,10 +1831,10 @@
           if(i < r.stars){ x.fillStyle = '#e6cb8f'; x.fill(); } else { x.strokeStyle = 'rgba(201,161,90,.4)'; x.lineWidth = 4; x.stroke(); }
         }
       } else {
-        txt('Reached step ' + r.step + ' of ' + r.total, 880, 40, '#dfe9e6', 'Georgia, serif', 1);
-        txt(r.stepName, 930, 34, '#7f9a97', 'Georgia, serif', 1);
+        txt(r.ans + ' of ' + r.total + ' questions answered', 880, 40, '#dfe9e6', 'Georgia, serif', 1);
+        txt('Stopped at: ' + r.stepName, 930, 34, '#7f9a97', 'Georgia, serif', 1);
       }
-      var bx = [['TIME', fmt(r.ms)], ['MISTAKES', String(r.err)], ['STEP', r.step + '/' + r.total]];
+      var bx = [['TIME', fmt(r.ms)], ['MISTAKES', String(r.err)], ['ANSWERED', r.ans + '/' + r.total]];
       bx.forEach(function(b, i){
         var left = 80 + i * 315; x.strokeStyle = 'rgba(201,161,90,.35)'; x.lineWidth = 2; x.strokeRect(left, 1010, 290, 150);
         x.textAlign = 'center'; x.fillStyle = '#7f9a97'; x.font = '26px "Courier New", monospace'; if('letterSpacing' in x) x.letterSpacing = '4px'; x.fillText(b[0], left + 145, 1060); if('letterSpacing' in x) x.letterSpacing = '0px';
@@ -1919,17 +1948,17 @@
   /* ---------- personal stats (saved on this device) ---------- */
   function statsLoad(){ try{ return JSON.parse(localStorage.getItem('dsv_stats') || '{}') || {}; }catch(e){ return {}; } }
   function statsSave(o){ try{ localStorage.setItem('dsv_stats', JSON.stringify(o)); }catch(e){} }
-  function statsGet(o, p){ return o[p] = o[p] || {runs:0, done:0, wins:0, fails:0, time:0, winTime:0, best:null, stars:0, err:0, at:{}, hist:[]}; }
+  function statsGet(o, p){ return o[p] = o[p] || {runs:0, done:0, wins:0, fails:0, time:0, winTime:0, best:null, stars:0, err:0, ans:0, maxAns:0, at:{}, hist:[]}; }
   function statsStart(p){ var o = statsLoad(); statsGet(o, p).runs++; statsSave(o); }
   function statsEnd(r){
     if(RUN.rec) return; RUN.rec = true;
     var o = statsLoad(), s = statsGet(o, S.path);
-    s.time += r.ms; s.err += r.err;
+    s.time += r.ms; s.err += r.err; s.ans = (s.ans || 0) + r.ans; s.maxAns = Math.max(s.maxAns || 0, r.ans);
     if(r.done) s.done++;
     if(r.ok && !r.partial){ s.wins++; s.winTime += r.ms; if(s.best === null || r.ms < s.best) s.best = r.ms; }
     if(!r.ok){ s.fails++; s.at[r.stepName] = (s.at[r.stepName] || 0) + 1; }
     if(r.stars > s.stars) s.stars = r.stars;
-    s.hist.unshift({l:r.label, st:r.stars, ms:r.ms, e:r.err, n:r.step, t:r.total});
+    s.hist.unshift({l:r.label, st:r.stars, ms:r.ms, e:r.err, n:r.step, a:r.ans, t:r.total});
     s.hist = s.hist.slice(0, 5);
     statsSave(o);
   }
@@ -1944,8 +1973,8 @@
       var worst = null, wn = 0; for(var k in s.at){ if(s.at[k] > wn){ wn = s.at[k]; worst = k; } }
       h += '<div class="st-grid"><div><small>PLAYED</small><b>' + s.runs + '</b></div><div><small>' + (p === 'c' ? 'REACHED END' : 'COMPLETED') + '</small><b>' + (p === 'c' ? s.done : s.wins) + '</b></div><div><small>BEST STARS</small><b>' + stars3(s.stars) + '</b></div></div>';
       h += '<div class="st-line">' + (p === 'c' ? '' : 'Best time: <b>' + (s.best === null ? '-' : fmt(s.best)) + '</b>' + (s.wins ? ' &middot; Average win: <b>' + fmt(s.winTime / s.wins) + '</b>' : '') + '<br>') +
-        'Mistakes per run: <b>' + (s.err / s.runs).toFixed(1) + '</b>' + (worst ? '<br>Hardest step for you: <b>' + worst + '</b> (' + wn + (wn === 1 ? ' fail' : ' fails') + ')' : '') + '</div>';
-      if(s.hist.length){ h += '<div class="st-line" style="margin-top:6px">Last runs:<br>' + s.hist.map(function(x){ return '&bull; ' + x.l.toLowerCase() + ' &middot; ' + fmt(x.ms) + ' &middot; ' + x.e + ' mistake' + (x.e === 1 ? '' : 's') + (x.st ? ' &middot; ' + stars3(x.st) : ' &middot; step ' + x.n + '/' + x.t); }).join('<br>') + '</div>'; }
+        'Questions answered per run: <b>' + ((s.ans || 0) / s.runs).toFixed(1) + '/' + P.total + '</b> &middot; Best run: <b>' + (s.maxAns || 0) + '/' + P.total + '</b><br>Mistakes per run: <b>' + (s.err / s.runs).toFixed(1) + '</b>' + (worst ? '<br>Hardest step for you: <b>' + worst + '</b> (' + wn + (wn === 1 ? ' fail' : ' fails') + ')' : '') + '</div>';
+      if(s.hist.length){ h += '<div class="st-line" style="margin-top:6px">Last runs:<br>' + s.hist.map(function(x){ return '&bull; ' + x.l.toLowerCase() + ' &middot; ' + fmt(x.ms) + ' &middot; ' + x.e + ' mistake' + (x.e === 1 ? '' : 's') + ' &middot; ' + (x.a !== undefined ? x.a : Math.max(0, x.n - 1)) + '/' + x.t + ' answered' + (x.st ? ' &middot; ' + stars3(x.st) : ''); }).join('<br>') + '</div>'; }
       h += '</div>';
     });
     h += '<div class="st-line" style="margin-bottom:12px">Total: <b>' + runs + '</b> mission' + (runs === 1 ? '' : 's') + ' &middot; <b>' + fmt(tot) + '</b> played. Saved on this device only.</div>';
@@ -2035,15 +2064,23 @@
   }
 
   /* ---------- FULLSCREEN ---------- */
+  var FS_REQ = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+  function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
   function toggleFullscreen(){
-    if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(function(){}); }
-    else { document.exitFullscreen().catch(function(){}); }
+    if(!FS_REQ){ toast('On iPhone: tap Share, then "Add to Home Screen" to play in full screen.'); return; }
+    var de = document.documentElement;
+    try{
+      if(!fsElement()){ var p = FS_REQ.call(de); if(p && p.catch) p.catch(function(){ toast('Full screen is not allowed here.'); }); }
+      else { var x = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if(x && x.catch) x.catch(function(){}); }
+    }catch(e){}
   }
-  document.addEventListener('fullscreenchange', function(){
+  function onFsChange(){
     var a = $('fsIconExpand'), b = $('fsIconCompress');
-    if(document.fullscreenElement){ a.style.display = 'none'; b.style.display = 'block'; }
+    if(fsElement()){ a.style.display = 'none'; b.style.display = 'block'; }
     else { a.style.display = 'block'; b.style.display = 'none'; }
-  });
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
 
   /* ---------- SOUND (Web Audio, no external files) ---------- */
   var soundEnabled = false, wildTimer = null;
@@ -2254,7 +2291,6 @@
   });
 
   document.body.classList.add('home-active');
-  if(!document.documentElement.requestFullscreen){ $('fullscreenBtn').style.display = 'none'; }
   syncToggles(); refreshBest();
   updateCounters();
   updateProgress();
